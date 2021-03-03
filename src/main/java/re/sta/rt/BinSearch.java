@@ -1,3 +1,5 @@
+package re.sta.rt;
+
 import java.util.Scanner;
 
 // 검색 범위의 맨 앞 인덱스를 pl, 맨 끝 인덱스를 pr, 중앙 인덱스를 pc라고 지정합니다.
