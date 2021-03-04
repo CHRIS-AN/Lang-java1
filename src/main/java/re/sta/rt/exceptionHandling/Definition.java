@@ -17,7 +17,7 @@ package re.sta.rt.exceptionHandling;
 
     에러는 메모리 부족(OuterOfMemoryError) 또는 스택오버플로우(StackOverflowError)와 같이
     일단 발생하면 복구할 수 없는 심각한 오류이고, 예외는 발생하더라도 수습될 수 있는 비교적 덜 심각하다.
-    
+
 
 
 
