@@ -89,7 +89,7 @@ class AnnualSubscriber implements Observer{
     }
 
     private void display() {
-        System.out.println(" 오늘의 뉴스? " + newString);
+        System.out.println("◎ 오늘의 뉴스? " + newString);
     }
 }
 
@@ -133,13 +133,24 @@ public class ObserverPattern {
         EventSubscriber eventSubscriber = new EventSubscriber(newsMachine);
 
         newsMachine.setNewsInfo("오늘 한파", "전국 영상 10도");
-
+        //newsMachine.notifyObserver();
         // eventSubscriber를 Observer 목록에서 탈퇴
-           newsMachine.delete(eventSubscriber);
+        //   newsMachine.delete(eventSubscriber);
+       // eventSubscriber.withdraw();
 
 
-
-        newsMachine.setNewsInfo("벛꽃 축제입니다.", "다 같이 벛꽃 보러가요 !");
+       // newsMachine.setNewsInfo("벛꽃 축제입니다.", "다 같이 벛꽃 보러가요 !");
 
     }
+
+
+    /*
+    정리 :
+    바로 Observable 클래스와 Observer 인터페이스다.
+    이를 이용하면 직접 인터페이스를 구현하지 않아도 쉽게 옵저버 패턴을 적용할 수 있다.
+    하지만 장점이 있다면 단점도 있듯이 여기에는 하나의 문제점이 있다.
+    바로 Observable이 인터페이스가 아닌 클래스로 구현되어있다는 점이다.
+    결국 상속을 받을 수 밖에 없는데 다른 클래스에서 반드시 상속을 받아야하는 경우에는 사용할 수 없다.
+    (JAVA는 다중상속을 지원하지 않기 때문) 때문에 적절히 상황을 봐서 사용해야 할 것이다
+     */
 }
