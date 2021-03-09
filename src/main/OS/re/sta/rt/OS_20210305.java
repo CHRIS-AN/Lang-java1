@@ -114,6 +114,6 @@ IPC 다양한 기법
 
 
 
-public class OS_processAndScheduler_20210305 {
+public class OS_20210305 {
 
 }

@@ -1,6 +1,6 @@
 package re.sta.rt;
 
-public class OS_processAndScheduler_20210304 {
+public class OS_20210304 {
 
     /*  프로세스와 스케쥴러의 이해 ( INTERRUPT 인터럽트 )
 
