@@ -8,6 +8,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/main/Dev.nuts" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/DesignPattern" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/OS" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/ComputingStructure" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/main/ComputingStructure/re.sta.rt/CS_20210311" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
