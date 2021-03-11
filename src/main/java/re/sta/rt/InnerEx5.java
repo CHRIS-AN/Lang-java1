@@ -17,6 +17,11 @@ class OuterClassEx5 {
 }
 
 public class InnerEx5 {
+
+
+
+
+
     public static void main(String[] args) {
         OuterClassEx5 outer = new OuterClassEx5();
         OuterClassEx5.Inner inner = outer.new Inner();
