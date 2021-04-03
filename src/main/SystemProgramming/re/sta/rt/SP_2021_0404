@@ -99,6 +99,110 @@ false
 
 -----------------------------------------------------------------
 
+Pthread
+
+    thread 표준 API
+        - POSIX 스레드 또는 Pthread(피-스레드)라고 부름
+
+    Pthread API
+        - 저수준 API로 100여개의 함수 제공
+        - 복잡하지만, 유닉스 시스템 핵심 스레딩 라이브러리
+        - 다른 스레딩 솔루션도 결국 Pthread를 기반으로 구현되어 있으므로, 익혀둘 가치가 있음
+
+Pthread 라이브러리 는 모든 함수가 pthread_로 시작
+                    <pthread.h> 해더 파일에 정의
+                    크게 두 가지 그룹
+                        - 스레드 관리 : 생성, 종료, 조인, 디태치, 함수 등
+                        - 동기화 : 뮤텍스 등 동기화 관련 함수
+
+스레드 생성
+    int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                        void *(start_routine)(void *), void *arg);
+
+*예)
+pthread_t thread1;
+void *thread_function(void *ptr);
+
+ret = pthread_create(&thread1, NULL, thread_function, (void*)message1);
+
+스레드 종료
+    //exit와 유사, NULL 또는 0은 정상종료
+    void pthread_exit(void *retval);
+
+*예)
+    pthread_exit(NULL); // NULL or 0
+
+스레드 조인
+    // thread : 기다릴 스레드 식별자
+    // thread_return : 스레드 리턴 값을 가져올 수 있는 포인터
+    int pthread_join(pthread_t thread, void **thread_return
+
+*예)
+    p_thread 식별자를 가진 스레드의 종료를 기다리고, status 포인터로 종료 값을 가져옴
+pthread_join(p_thread, (void *)&status);
+printf("thread join : %d\n", status);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
