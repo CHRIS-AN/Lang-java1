@@ -1,0 +1,134 @@
+
+
+
+스레드 디태치
+    해당 스레드가 종료될 경우, 즉시 관련 리소스를 해제(free) 한다.
+        - pthread_join 를 기다리지 않고, 종료 즉시 리소스를 해제한다.
+
+    // thread : detach 할 스레드 식별자
+    int pthread_detach(pthread_t thread);
+
+
+Pthread 뮤텍스 - 상호 배제 기법
+    뮤텍스 선언과 초기화
+        pthread_mutex_t mutex_lock = PTHREAD_MUTEX_INITIALIZER;
+    뮤텍스 락 걸기/풀기
+    int pthread_mutex_lock(pthread_mutex_t *mutex);
+    int pthread_mutex_unlock(pthread_mutex_t *mutex);
+
+* 뮤텍스로 동기화를 하지 않을 경우에, 스레드를 동시에 두 개의 스레드를 실행 시킬 때, 이상이 올 수도 있다.
+
+--------------------------------------------------------------------
+
+메모리와 파일 시스템
+----
+파일 처리 성능 개성 기법 = 메모리에 파일 매핑
+    #include <sys/mman.h>
+    void *mmap(void *start, size_t length, int prot, int flags, inf fd, off_t offset);
+
+    - [start + offset] ~ [start + offset + length] 만큼의 물리 메모리 공간을 mapping 할 것을 요청
+    - 보통 start : NULL 또는 0 사용, offset : mapping 되기 원하는 물리 메모리 주소로 지정
+    - prot : 보호모드 설정
+        PROT_READ(읽기 가능) / PROT_WRITE(쓰기 가능) / PROT_EXEC(실행가능) / PROT_NONE(접글 불가)
+    - flag : 메모리 주소 공간 설정
+        MAP_SHARED(다른 프로세스와 공유 가능) / MAP_PRIVATE(프로세스 내에서만 사용가능) / MAP_FIXED(지정된 주소로 공간 지정)
+    - fd : device file 에 대한 file descriptor
+
+< 프로세스(시스템콜, 스케줄링, 인터럽트) , 컴퓨터 구조 (DMA, System Bus) >
+
+
+
+
+mmap 동작 방식으로 이해하는 실제 메모리 동작
+    1. mmap 실행 시, 가상 메모리 주소에 file 주소 매핑(가상 메모리 이해)
+    2. 해당 메모리 접근 시, (요구 페이징, lazy allocation)
+        - 페이지 폴트 인터럽트 발생
+        - OS 에서 file data 를 복사해서 물리 메모리 페이지에 넣어 줌
+    3. 메모리 read 시, 해당 물리 페이지 데이터를 읽으면 됨
+    4. 메모리 write 시, 해당 물리 페이지 데이터 수정 후, 페이지 상태 flag 중 dirty bit를 1로 수정
+    5. 파일 close 시, 물리 페이지 데이터가 file 에 업데이트 됨 (성능 개선)
+
+    장점 :
+        1. read(), write() tl 반복적인 파일 접근을 방지하여 성능 개선
+        2. mapping 된 영역은 파일 처리를 위한 lseek() 을 사용하지 않고 간단한 포인터 조작으로 탐색 가능
+
+    단점 :
+        1. mmap 은 페이지 사이즈 단위로 매핑 :
+                    페이지 사이즈 단위의 정수배가 아닌 경우, 한 페이지 정도의 공간 추가 할당 및 남은 공간을 0 으로 채워주게 됨
+
+
+메모리에 파일 매핑
+    int munmap(void *addr, size_t length)
+        - *addr에 mapping된 물리 메모리 주소를 해제한다.
+        - length : mapping된 메모리의 크기 (mmap에서 지정했던 동일 값을 넣음)
+
+
+    int msync(void *strat, size_t length, int flags);
+
+        start : mmap()를 통해 리턴 받은 메모리 맵의 시작 주소
+        length : 동기화를 할 길이. 시작 주소로부터 길이를 지정하면 된다.
+        flags :
+            MS_ASYNC : 비동기 방식, 동기화(Memory -> File)하라는 명령만 내리고 결과에 관계 없이 다음 코드 실행 (따라서, 동기화가 완료안된 상태로 다음코드 실행 가능)
+            MS_SYNC : 동기 방식, 동기화(Memory -> FIle)가 될 때까지 블럭 상태로 대기
+            MS_INVALIDATE : 현재 메모리 맵을 무효화하고 파일의 데이터로 갱신. 즉 File -> Memory
+
+----------------------------------------------------------------------------------------
+
+inode 방식 파일 시스템
+
+    inode 구조체는?
+        Mode    : 파일 종류 /권한 (rwx)  정보가 들어간다.
+        Owner Info : 소유자 / 소유 그룹 정보가 들어간다.
+        Size    : 파일 사이즈
+        Timestamps  : 생성, 수정 시간 정보
+        Direct blocks   : 직접 주소를 가리키는 데이터가 여러개가 있고,
+        Single indirect  :
+        Double indirect  : 간접 주소를 가리키는..
+        Triple indirect  :
+
+
+이러한 inode 정보를 한 번에 가져오 올 수 있는 system call?
+inode 메타데이터 - stat 함수
+
+    #include <sys/types.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
+
+    int stat(const char *path, struct stat *buf);
+    int fstat(int filedes, struct stat *buf);
+------------------------------------------------------------------------------------------
+
+Standard Stream (표준 입출력) 과 파일 시스템콜
+
+    command 로 실행되는 프로세스는 세 가지 스트림이 존재
+        1. 표준 입력 스트림 - stdin
+        2. 표준 출력 스트림 - stdout
+        3. 오류 출력 스틀팀 - stderr
+    모든 스트림은 일반적으로 plain text 로 console 에 출력 하도록 되어있음.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
