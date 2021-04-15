@@ -1,0 +1,231 @@
+
+
+
+
+쉘 스크립트 반복문
+-----------------------------------------------------------
+
+파일검사
+    -e 파일명 : # 파일이 존재하면 참
+    -d 파일명 : # 파일이 디렉토리면 참
+    -h 파일명 : # 심볼릭 링크파일
+    -f 파일명 : # 파일이 일반파일이면 참
+    -r 파일명 : # 파일이 읽기 가능이면 참
+    -s 파일명 : # 파일이 크기가 0이 아니면 참
+    -u 파일명 : # 파일이 set-user-id가 설정되면 참
+    -w 파일명 : # 파일이 쓰기 가능 상태이면 참
+    -x 파일명 : # 파일이 실행 가능 상태이면 참
+
+
+
+논리 연산(참고)
+
+조건1 -a 조건2
+조건1 -o 조건2
+조건1 && 조건2
+조건1 || 조건2
+!조건
+true
+false
+
+등등...
+
+조건문 if/else 구문
+
+    if [ 조건 ]
+    then
+        명령문
+    else
+        명령문
+    fi
+
+
+쉘 스크립트 해석하기
+    - 명령 해석 (ping.sh)
+        ping -c 1 192.168.0.1 1>/dev/null
+            0 : 표준입력, 1: 표준출력, 2: 표준에러
+        1>/dev/null : 표준 출력 내용은 버려라 (출력하지 말아라)
+        -c 1 은 1번 체크해라
+---------------------------------------------------------------
+
+반복문 for 구문
+
+    for 변수 in 변수값1 변수값2 ....
+    do
+        명령문
+    done
+
+반복문 while 구문
+
+    while [ 조건문 ]
+    do
+        명령문
+    done
+----------------------------------------------------------------
+
+압축 명령 tar
+
+    x : 묶음을 해제
+    c : 파일을 묶음
+    v : 묶음/해제 과정을 화면에 표시
+    z : gunzip을 사용
+    f : 파일 이름을 지정
+
+*예)
+1. 압축 시 주로 사용하는 옵션
+    tar -cvzf [압축된 파일 이름] [압축할 파일이나 폴더명]
+2. 압축을 풀을 때 주로 사용하는 옵션
+    tar -xvzf [압축 해제할 압축 아카이브 이름]
+
+------------------------------------------------------------------
+
+로그 파일 정리하기
+
+    find . -type f -name '파일명검색어' -exec bash -c "명령어1; 명령어2; 명령어3"\;
+        # -tpye f: 파일 타입 지정해서 검색 (f는 일반파일)
+
+
+*예)
+    #!/bin/bash
+
+    LOGDIR=/var/log
+    GZIPDAY=1
+    DELDAY=2
+    cd $LOGDIR
+    echo "cd $LOGDIR"
+
+    sudo find . -type f -name '*log.?' -mtime +$GZIPDAY -exec bash -c "gzip {}" \;
+    sudo find . -type f -name '*.gz' -mtime +$DELDAY -exec bash -c "rm -f {}" \;
+
+-----------------------------------------------------------------
+
+Pthread
+
+    thread 표준 API
+        - POSIX 스레드 또는 Pthread(피-스레드)라고 부름
+
+    Pthread API
+        - 저수준 API로 100여개의 함수 제공
+        - 복잡하지만, 유닉스 시스템 핵심 스레딩 라이브러리
+        - 다른 스레딩 솔루션도 결국 Pthread를 기반으로 구현되어 있으므로, 익혀둘 가치가 있음
+
+Pthread 라이브러리 는 모든 함수가 pthread_로 시작
+                    <pthread.h> 해더 파일에 정의
+                    크게 두 가지 그룹
+                        - 스레드 관리 : 생성, 종료, 조인, 디태치, 함수 등
+                        - 동기화 : 뮤텍스 등 동기화 관련 함수
+
+스레드 생성
+    int pthread_create(pthread_t *thread, const pthread_attr_t *attr,
+                        void *(start_routine)(void *), void *arg);
+
+*예)
+pthread_t thread1;
+void *thread_function(void *ptr);
+
+ret = pthread_create(&thread1, NULL, thread_function, (void*)message1);
+
+스레드 종료
+    //exit와 유사, NULL 또는 0은 정상종료
+    void pthread_exit(void *retval);
+
+*예)
+    pthread_exit(NULL); // NULL or 0
+
+스레드 조인
+    // thread : 기다릴 스레드 식별자
+    // thread_return : 스레드 리턴 값을 가져올 수 있는 포인터
+    int pthread_join(pthread_t thread, void **thread_return
+
+*예)
+    p_thread 식별자를 가진 스레드의 종료를 기다리고, status 포인터로 종료 값을 가져옴
+pthread_join(p_thread, (void *)&status);
+printf("thread join : %d\n", status);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

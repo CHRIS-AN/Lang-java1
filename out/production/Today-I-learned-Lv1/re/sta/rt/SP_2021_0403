@@ -1,0 +1,415 @@
+
+
+
+
+우선순위 기반 스케쥴러
+    Priority-Based 스케쥴러 -> 여러 스케쥴링 알고리즘 중 1개.
+        - 정적 우선순위 : 프로세스마다 우선순위를 미리 지정
+
+        - 동적 우선순위 : 스케쥴러가 상황에 따라 우선순위를 동적으로 변경
+
+    POSIX 라는 것으로 시스템콜을 정의를 하였다.
+
+
+우선순위 변경하기 -nice()
+    - 프로레스 중 사실상 .root가 소유한 프로세스만, 우선순위를 높일 수 있음.
+        1. 다른 프로세스는 우선순위를 낮출 수만 있음
+        2. 스케쥴링 방식에 따라 우선순위가가 적용될 수도, 안될수도 있다.
+
+-getpriortiy()
+-setpriority()
+
+-----------------------------------------------------------------
+
+다양한 IPC 기법
+
+메시지 큐: 양방향 통신이 가능하다 (pipe와는 상반된다. pipe는 단방향 통신)
+    msqid = msgget(key. msgflg) // key는 1234, msgflg는 옵션
+        * msgflg 설정 :
+               IPC_CREAT : 새로운 키면 식별자를 새로 생성, IPC_CREATE|접근 권한
+
+    msgsnd(msqid, &sbuf, buf_length, IPC_NOWAIT)
+
+*코드 예제
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/msg.h>
+
+typedef struct msgbuf {
+    long type;
+    char text[50];
+} MsgBuf;
+
+int main(void) {
+    int msgid, len;
+    MsgBuf msg;
+    key_t key = 1234;
+    msgid = msgget(key, IPC_CREAT|0544);
+    if(msgid == -1) {
+        perror("msgget");
+        exit(1);
+    }
+    msg.type =1;
+    strcpy(msg.text, "Hello Message Queue\n");
+    if(msgnd(msgid, (void *)&msg, 50, IPC_NOWAIT) == -1) {
+        perror:("msgsnd");
+        exit(1)
+    }
+    return 0;
+
+}
+
+
+키 생성 : ftok() -> 키 생성을 위한 함수
+    - path 경로 명의 inode 값과 숫자값(id)를 기반으로 키 생성
+    - 경로 삭제 후 재생성 시 inode 값이 달라지므로, 이전과는 다른 키값이 리턴
+
+키생성 예제)
+    #include <sys/ipc.h>
+    key_t ftok(const char *path, int id);
+
+    key = ftok("keyfile",1);
+    id = msgget(key, IPC_CREAT|0640);
+
+-----------------------------------------------------------
+명령어 : ipcs <- 확인해보기
+
+msgctl 명령어로 실행중인 메세지 큐를 삭제할 수 있습니다. ( msg를 컨트롤한다 )
+
+-----------------------------------------------------------
+Shared Memory Segments
+    - 노골적으로 kernel space 에 메모리 공간을 만들고, 해당 공간을 변수처럼 쓰는 방식
+    - message queue 처럼 FIFO 방식이 아니라, 해당 메모리 주소를 마치 변수처럼 접근하는 방식
+    - 공유메모리 key를 가지고, 여러 프로세스가 접근 가능
+
+1. 공유메모리 생성
+    #include <sys/types.h>
+    #include <sys/ipc.h>
+    #include <sys/shm.h>
+
+    // key : 임의 숫자 또는 ftok 함수로 생성한 키 값
+    // size : 공유 메모리 크기
+    // shmflg : 공유 메모리 속성
+    // return : 공유 메모리 식별자 리턴
+    int shmget(key_t key, size_t size, int shmflg);
+
+    shmid = shmget((key_t)1234, SIZE, IPC_CREAT|0666));
+
+
+2. 공유 메모리 연결
+    #include <sys/types.h>
+    #include <sys/shm.h>
+
+    // shmid : shmget 함수로 생성한 공유 메모리 식별자
+    // shmaddr : 공유 메모리 연결 주소 (보통 (char *)NULL으로 설정하면, 알아서 적절한 주소로 연결)
+    // shmflg :  공유 메모리의 읽기/쓰기 권한 ( 0이면 읽기/쓰기 가능, SHM_RDONLY면 읽기만 가능)
+    // return : 성공 시 연결된 공유 메모리의 시작 주소를 ㄹ티너
+
+    void *shmat(int shmid, const void *shmaddr, int shmflg);
+
+    shmaddr = (char *)shmid, (char *)NULL, 0)
+
+3. 공유 메모리 해제
+    #include <sys/types.h>
+    #include <sys/shm.h>
+
+    int shmdt(char * shmaddr);
+
+4. 공유 메모리 읽기/쓰기
+    : 마치 포인터 변수처럼 사용하면 됨.
+
+* 공유 메모리에서 읽기
+    printf("%s\n", (char *)shmaddr)
+* 공유 메모리에서 쓰기
+    strcpy:((char *)shmaddr, "Linux Programming")
+
+
+참고 : shmctl()
+    #include <sys/types.h>
+    #include <sys/ipc.h>
+    #include <sys/shm.h>
+
+    // shmid : shmget 함수로 생성한 공유 메모리 식별자
+    // cmd : 수행할 제어 기능 ( 예 IPC_RMID - shmid 로 지정한 공유 메모리 제거)
+    // buf : 제어 기능에 사용되는 공유 메모리 구조체의 구조
+
+    int shmctl( int shmid, int cmd, struct shmid_ds *buf);
+
+    // 예
+    shmctl(shmid, IPC_RMID, (struct shmid_ds *)NULL); --> 해당 공유메모리를 삭제한다.
+
+--------------------------------------------------------------------------
+
+시그널 (signal)
+    - 유닉스에서 30년이상 사용된 전통적인 기법
+    - 커널 또는 프로세스에서 다른 프로세스에 어떤 이벤트가 발생 되었는지를 알려주는 기법
+*예) ctrl + C를 눌러서 프로세스를 종료시키기
+     ctrl + Z 를 눌러스 프로세스를 백그라운드 프로세스로.
+
+즉, 시그널 -> OS -> 프로세스 ( 프로세스 내에 디폴트 처리<종류>를 하게 됩니다 )
+
+주요 시그널 종류
+    SIGKILL : 프로세스를 죽여라 ( 슈퍼관리자가 사용하는 시그널로, 프로세스는 어떤 경우든 죽도록 되어있음)
+    SIGALARM : 알람을 발생한다.
+    SIGSTP : 프로세스를 멈춰라 (Ctrl + Z)
+    SIGCONT : 멈춰진 프로세스를 실행해라
+    SIGINT : 프로세스에 인터럽트를 보내서 프로세스를 죽여라 (Ctrl + C)
+    SIGSEGV : 프로세스가 다른 메모리영역을 침범했다.
+
+    *예) kill -l
+
+
+시그널 signal 동작
+    - 프로그램에서 특정 시그널의 기본 동작 대신 다른 동작을 하도록 구현 가능.
+    - 각 프로세스에서 시그널 처리에 대해 다음과 같은 동작 설정 가능
+        1. 시그널 무시
+        2. 시그널 블록(블록을 푸는 순간, 해당프로세스에서 시그널 처리)
+        3. 프로그램 안에서 등록된 시그널 핸들러로 재정의한 특정 동작 수행
+        4. 등록된 시그널 핸들러가 없다면, 커널에서 기본 동작 수행
+
+시그널 보내기
+    #include <sys/types.h>
+    #include <signal.h>
+
+   // pid : 프로세스의 PID
+   // sig : 시그널 번호
+
+   int kill (pid_t pid, int sig);
+
+*예) ./loog &
+    ./sigkill 1806 2
+    ps
+    ---> 시그널 종류와 번호 확인하기 : kill -l
+
+받은 시그널에 따른 동작 정의
+    #include <signal.h>
+    void (*signal int signum, void (*handler)(int)))(int);
+
+*예1) void (handler)(int) : SIG_IGN - 시그널 무시, SIG_DEL - 디폴트 동작
+signal (SIGINT, SIG_IGN);
+
+*예2) SIGINT 시그널 수신 시 , signal_handler 함수를 호출
+signal (SIGINT, (void *)signal_handler);
+
+
+-----------------------------------------------------------------------
+
+시그널과 프로세스
+    PCB 에 해당 프로세스가 블록 또는 처리해야하는 시그널 관련 정보 관리
+    커널 모드에서 사용자 모드 전환 시, 시그널 정보 확인해서 , 해당 처리
+
+
+------------------------------------------------------------------------
+
+쉡 스크립트
+    - 쉘을 사용해서 프로그래밍을 할 수 있음.
+    - 서버 작업 자동화 및 운영(DevOps)을 위해 기본적으로 익혀둘 필요가 있음
+    - 쉘 명령어를 기본으로 하되, 몇 가지 문법이 추가된 형태
+    - 시스템 프로그래밍에서 꼭 익히는 내용중 하나.
+
+쉘 스크립트 기본 문법
+    - 쉡 스크립트는 파일로 작성 후, 파일을 실행
+    - 파일의 가장 위의 첫 라인은 "#!/bin/bash" 로 시작
+    - 쉡 스크립트 파일은 실행 권한을 가지고 있어야함.
+    - 일반적으로 '파일이름.sh' 와 같은 형태로 파일 이름을 작성함.
+
+echo는 화면에 출력해주는 쉘 명령어 입니다.
+
+
+변수
+    선언 : 변수명 = 데이터
+          변수명=데이터 ( 사이에 띄어쓰기는 허용됮 ㅣ않음)
+
+
+$을 통해서 echo 함수에서 작성을해주면 된다.
+
+
+리스트 변수(배열)
+    선언 : 변수명=(데이터1 데이터2 데이터3...)
+    사용 : ${변수명[인데스번호]}
+
+*예)
+#!/bin/bash
+
+deamons=("httpd" "mysqid" "vsftpd")
+echo ${deamons[1]}   --> 배열의 두 번째 인덱스에 해당하는 mysqid 출력
+echo ${deamons[@]}   --> 배열의 모든 데이터 출력
+echo ${deamons[*]}   --> 배열의 모든 데이터 출력
+echo ${#deamons[@]}  --> 배열 크기 출력
+
+filelist=( $(ls) )   --> 해당 쉘스크립트 실행 실행 디렉토리의 파일 리스트를 배열로 $filelist 변수
+    filelist=$(ls)   : 이렇게 사용을하여도 작동은 한다.
+echo ${filelist[*]}  --> 모든 데이터 출력
+
+*예)
+#!/bin/bash
+
+mine={"chris" 20 "IT"}
+echo ${mine[*]}
+
+쉡 스크립트 연산자
+    expr : 숫자 계산
+    expr 를 사용하는 경우 역작은 따옴표(`)를 사용해야함 (작은 따옴표가 x )
+    연산자 *와 괄호() 앞에는 역슬래시() 같이 사용
+    연산자와 숫자, 변수, 기호 사이에는 space를 넣어야함.
+
+*예)
+    num=`expr \( 3\* 5 \) / 4 + 7
+    echo $num
+
+조건문 문법
+    - 기본 if 구문
+        : 명령문을 꼭 탭으로 띄워야하는 것은 아님( then과 fi 안에만 들어가 있으면 됨)
+
+*예)
+if [ 조건 ]
+then
+    명령문
+fi
+
+값1 -eq 값2 : equal
+갑1 -ne 값2 : not equal
+갑1 -lt 값2 : less than 1이 2보다 작음
+갑1 -le 값2 : less or equal 1이 2보다 작거나 같음
+갑1 -gt 값2 : greater than 1이 2보다 큼
+갑1 -ge 값2 : greater or equal 1이 2보다 크거나 같음
+
+*예)
+#!/bin/bash
+
+if [ $1 -gt $2 ]
+then
+    echo "$1 is higher $2"
+    exit
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
