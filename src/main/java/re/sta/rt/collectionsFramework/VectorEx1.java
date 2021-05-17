@@ -1,6 +1,8 @@
 package re.sta.rt.collectionsFramework;
 
+import java.text.SimpleDateFormat;
 import java.util.Vector;
+import java.util.zip.DataFormatException;
 
 public class VectorEx1 {
 
@@ -33,6 +35,7 @@ public class VectorEx1 {
         System.out.println("=== After Clear() ===");
         print(v);
 
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
 
         /*
                ArrayList 나 Vector 같이 배열을 이용한 자료구조는 데이터를 읽어오고 저장하는 데는 효율이 좋지만,
