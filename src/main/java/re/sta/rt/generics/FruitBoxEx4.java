@@ -61,17 +61,24 @@ public class FruitBoxEx4 {
         FruitBox_4<AppleEx4> appleBox = new FruitBox_4<AppleEx4>();
         FruitBox_4<GrapeEx4> grapeBox = new FruitBox_4<GrapeEx4>();
 
-        appleBox.add(new AppleEx4("GreenApple", 3300));
-        appleBox.add(new AppleEx4("GreenApple", 2200));
-        appleBox.add(new AppleEx4("GreenApple", 1800));
+        appleBox.add(new AppleEx4("GreenApple", 300));
+        appleBox.add(new AppleEx4("GreenApple", 100));
+        appleBox.add(new AppleEx4("GreenApple", 200));
 
+        grapeBox.add(new GrapeEx4("YellowGrape", 400));
         grapeBox.add(new GrapeEx4("YellowGrape", 300));
         grapeBox.add(new GrapeEx4("YellowGrape", 200));
-        grapeBox.add(new GrapeEx4("YellowGrape", 100));
 
         Collections.sort(appleBox.getList(), new AppleComp());
         Collections.sort(grapeBox.getList(), new GrapeComp());
 
+        System.out.println(appleBox);
+        System.out.println(grapeBox);
+
+        System.out.println();
+
+        Collections.sort(appleBox.getList(), new FruitComp());
+        Collections.sort(grapeBox.getList(), new FruitComp());
 
         System.out.println(appleBox);
         System.out.println(grapeBox);
