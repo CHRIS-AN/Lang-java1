@@ -34,7 +34,7 @@ class GrapeEx4 extends FruitEx4 {
 class AppleComp implements Comparator<AppleEx4> {
     @Override
     public int compare(AppleEx4 t1, AppleEx4 t2) {
-        return t2.weight = t1.weight;
+        return t2.weight - t1.weight;
     }
 }
 
@@ -69,8 +69,11 @@ public class FruitBoxEx4 {
         grapeBox.add(new GrapeEx4("YellowGrape", 300));
         grapeBox.add(new GrapeEx4("YellowGrape", 200));
 
-        Collections.sort(appleBox.getList(), new AppleComp());
-        Collections.sort(grapeBox.getList(), new GrapeComp());
+//        Collections.sort(appleBox.getList(), new AppleComp());
+//        Collections.sort(grapeBox.getList(), new GrapeComp());
+
+        Collections.sort(appleBox.getList(), new FruitComp());
+        Collections.sort(grapeBox.getList(), new FruitComp());
 
         System.out.println(appleBox);
         System.out.println(grapeBox);
