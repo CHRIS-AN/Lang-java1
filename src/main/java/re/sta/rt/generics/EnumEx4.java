@@ -1,5 +1,12 @@
 package re.sta.rt.generics;
 
+/**
+ * @author 안정민
+ * @since 2021-05-20
+ *
+ */
+
+
 abstract class MyEnum<T extends MyEnum<T>> implements Comparable<T> {
     static int id = 0;
     int ordinal;
